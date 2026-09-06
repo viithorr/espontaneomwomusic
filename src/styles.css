@@ -269,6 +269,18 @@ button { cursor: pointer; }
 .live-now span { color:#818a84; font-size:9px; }
 .live-control-layout { max-width:1300px; margin:0 auto; display:grid; grid-template-columns:minmax(0,1fr) 280px; gap:18px; align-items:start; }
 .live-command-area { min-width:0; padding:20px; border:1px solid #222824; border-radius:15px; background:#101411; }
+.live-program-bar { margin-bottom:12px; padding:9px 10px; border:1px solid #29322b; border-radius:10px; background:#151b17; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.live-program-bar > div { min-width:0; display:flex; align-items:center; gap:8px; }
+.live-program-bar > div > svg { width:29px; height:29px; padding:7px; border-radius:8px; color:var(--lime); background:#222c1f; }
+.live-program-bar span { min-width:0; display:flex; flex-direction:column; }
+.live-program-bar small { color:#687169; font-size:6px; letter-spacing:.13em; }
+.live-program-bar b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
+.live-program-bar select { max-width:190px; min-width:0; height:34px; padding:0 8px; border:1px solid #303a32; border-radius:7px; color:#cbd2cd; background:#1a211c; font-size:8px; }
+.program-song-strip { display:flex; gap:6px; overflow-x:auto; margin:-3px 0 12px; padding:2px 0 5px; }
+.program-song-strip button { min-width:120px; max-width:180px; min-height:39px; padding:6px 9px; border:1px solid #29312b; border-radius:8px; color:#858e88; background:#151a17; display:flex; align-items:center; gap:7px; text-align:left; }
+.program-song-strip button.active { color:#182014; border-color:var(--lime); background:var(--lime); }
+.program-song-strip small { width:18px; height:18px; flex:0 0 18px; display:grid; place-items:center; border-radius:5px; background:rgba(255,255,255,.08); font-size:7px; }
+.program-song-strip b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:8px; }
 .live-song-bar { display:flex; align-items:center; justify-content:space-between; gap:14px; padding-bottom:16px; border-bottom:1px solid #252b27; }
 .live-song-bar > div { min-width:0; display:flex; align-items:center; gap:10px; }
 .live-song-bar > div > svg { width:35px; height:35px; padding:8px; border-radius:9px; color:var(--lime); background:#20291d; }
@@ -406,6 +418,47 @@ button { cursor: pointer; }
 .setup-slide-preview .chord-line i { color:#252b27; font-family:inherit; font-weight:600; }
 .setup-slide-preview .instrumental-chords { min-height:25px; gap:10px; padding:3px 6px; border-color:#d4d9d2; background:#e4e7e2; }
 .setup-slide-preview .instrumental-chords b { color:#dd741d; font-size:7px; }
+.program-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.program-heading > div { display:flex; align-items:center; gap:9px; }
+.program-heading > div > svg { width:34px; height:34px; padding:8px; border-radius:9px; color:#719a32; background:#edf6df; }
+.program-heading span { display:flex; flex-direction:column; }
+.program-heading b { font-size:11px; }
+.program-heading small { margin-top:2px; color:#929a94; font-size:8px; }
+.program-heading > button { min-height:36px; padding:0 11px; border:1px solid #b8d889; border-radius:8px; color:#5f8727; background:#f4faeb; display:flex; align-items:center; gap:5px; font-size:9px; font-weight:700; }
+.program-empty { min-height:130px; margin-top:14px; border:1px dashed #dce2d8; border-radius:11px; background:#fafbf9; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#8d958f; text-align:center; }
+.program-empty > svg { width:25px; color:#86a755; }
+.program-empty b { margin-top:8px; color:#444c46; font-size:10px; }
+.program-empty small { margin-top:3px; font-size:8px; }
+.program-list { margin-top:14px; display:flex; flex-direction:column; gap:7px; }
+.program-list > div { min-width:0; padding:11px; border:1px solid #e1e5de; border-radius:10px; background:#fafbf9; display:grid; grid-template-columns:36px minmax(0,1fr) auto 32px; align-items:center; gap:9px; }
+.program-list > div > span { width:34px; height:34px; display:grid; place-items:center; border-radius:8px; color:#739b36; background:#edf5e2; }
+.program-list > div > span svg { width:16px; }
+.program-list > div > div { min-width:0; display:flex; flex-direction:column; }
+.program-list b { font-size:10px; }
+.program-list small { margin-top:2px; color:#939b95; font-size:7px; }
+.program-list p { margin:4px 0 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#788179; font-size:8px; }
+.program-list button { height:31px; padding:0 9px; border:1px solid #dce1d9; border-radius:7px; color:#5f695f; background:white; font-size:8px; }
+.program-list button.delete { width:31px; padding:0; color:#bd5b52; border-color:#efd7d4; background:#fff8f7; }
+.program-list button.delete svg { width:13px; }
+.program-modal { width:min(780px,100%); }
+.program-name { margin:22px 0 14px; display:flex; flex-direction:column; gap:6px; color:#4c544f; font-size:10px; font-weight:700; }
+.program-name input { width:100%; height:43px; padding:0 12px; border:1px solid #dfe3dc; border-radius:9px; outline:0; background:#fcfdfb; }
+.program-builder { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:15px; }
+.program-builder > div { min-width:0; padding:12px; border:1px solid #e1e5de; border-radius:10px; background:#fafbf9; }
+.program-builder > div > b { font-size:10px; }
+.program-builder > div > small { display:block; margin:2px 0 9px; color:#929a94; font-size:7px; }
+.program-picker,.program-order { max-height:280px; overflow:auto; display:flex; flex-direction:column; gap:5px; }
+.program-picker label { padding:8px; border:1px solid #e1e5de; border-radius:8px; background:white; display:flex; align-items:center; gap:8px; }
+.program-picker label > span { min-width:0; display:flex; flex-direction:column; }
+.program-picker b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9px; }
+.program-picker small { color:#979e99; font-size:7px; }
+.program-order > div { min-height:42px; padding:5px; border:1px solid #e1e5de; border-radius:8px; background:white; display:grid; grid-template-columns:22px minmax(0,1fr) 27px 27px 27px; align-items:center; gap:4px; }
+.program-order > div > span { width:21px; height:21px; display:grid; place-items:center; border-radius:5px; background:#edf2e9; font-size:7px; }
+.program-order > div > b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:8px; }
+.program-order button { width:27px; height:27px; padding:0; border:1px solid #dfe3dc; border-radius:6px; background:#fafbf9; display:grid; place-items:center; }
+.program-order button:disabled { opacity:.3; }
+.program-order button svg { width:12px; }
+.program-order > p { padding:25px 8px; color:#969d98; text-align:center; font-size:8px; }
 .setup-block .main-command-grid > button { cursor:default; }
 .setup-block .main-command-grid > button:hover { transform:none; filter:none; box-shadow:inset 0 -1px 0 rgba(0,0,0,.1); }
 .inline-add { display:flex; gap:6px; margin-top:10px; }
@@ -661,6 +714,16 @@ button { cursor: pointer; }
   .setup-slide-preview { padding:6px; font-size:7px; }
   .setup-slide-preview .chord-lyrics { font-size:6.5px; }
   .setup-slide-preview .chord-line b,.setup-slide-preview .instrumental-chords b { font-size:6px; }
+  .program-heading { align-items:flex-start; flex-direction:column; }
+  .program-heading > button { width:100%; min-height:42px; justify-content:center; }
+  .program-list > div { grid-template-columns:34px minmax(0,1fr) 31px; }
+  .program-list > div > button:not(.delete) { grid-column:2; min-height:35px; }
+  .program-list button.delete { grid-column:3; grid-row:1; }
+  .program-builder { grid-template-columns:1fr; }
+  .program-picker,.program-order { max-height:220px; }
+  .live-program-bar { align-items:stretch; flex-direction:column; }
+  .live-program-bar select { width:100%; max-width:none; min-height:39px; }
+  .program-song-strip button { min-width:105px; }
   .quick-grid { grid-template-columns:repeat(2,1fr); }
   .quick-grid button { min-width:0; min-height:48px; }
   .quick-heading { gap:8px; }

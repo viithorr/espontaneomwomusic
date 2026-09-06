@@ -6,6 +6,7 @@ import {
   ChevronRight,
   ArrowDown,
   ArrowUp,
+  CalendarDays,
   CircleUserRound,
   Crown,
   Eye,
@@ -56,6 +57,7 @@ type Song = {
   hasChords?: boolean;
   transpose?: number;
 };
+type Program = { id: string; name: string; songIds: string[] };
 type CommandTag = { id: string; label: string; color: string };
 type Cue = {
   label: string;
@@ -71,6 +73,8 @@ type Session = {
   code: string;
   song: Song | null;
   songs: Song[];
+  programs: Program[];
+  activeProgramId: string | null;
   cue: Cue;
   members: Member[];
   customCues: string[];
@@ -268,6 +272,8 @@ const defaultSession: Session = {
   code: "MWO26",
   song: null,
   songs: [],
+  programs: [],
+  activeProgramId: null,
   cue: {
     label: "Aguardando",
     content: "A direção aparecerá aqui",
@@ -292,6 +298,8 @@ function normalizeSession(parsed: Partial<Session> | null): Session {
       roomName: wasDemo ? "" : (parsed.roomName ?? ""),
       song: wasDemo ? null : (parsed.song ?? null),
       songs: wasDemo ? [] : (parsed.songs ?? (parsed.song ? [parsed.song] : [])),
+      programs: wasDemo ? [] : (parsed.programs ?? []),
+      activeProgramId: wasDemo ? null : (parsed.activeProgramId ?? null),
       members: wasDemo ? [] : (parsed.members ?? []),
       customCues: parsed.customCues?.length ? parsed.customCues : STANDARD_CUES,
       commandTags: parsed.commandTags?.length ? parsed.commandTags : DEFAULT_COMMAND_TAGS,
@@ -923,6 +931,15 @@ function Admin({
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [autoPlaying, setAutoPlaying] = useState(false);
   const [audience, setAudience] = useState<"all" | Role>("all");
+  const [showProgram, setShowProgram] = useState(false);
+  const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
+  const [programName, setProgramName] = useState("");
+  const [programSongIds, setProgramSongIds] = useState<string[]>([]);
+
+  const activeProgram = session.programs.find((program) => program.id === session.activeProgramId) ?? null;
+  const liveSongs = activeProgram
+    ? activeProgram.songIds.map((id) => session.songs.find((song) => song.id === id)).filter((song): song is Song => Boolean(song))
+    : session.songs;
 
   useEffect(() => {
     if (!isOwner && tab !== "live") setTab("live");
@@ -1003,6 +1020,52 @@ function Admin({
     const song = session.songs.find((item) => item.id === songId) ?? null;
     updateSession({ ...session, song });
   };
+  const selectProgram = (programId: string) => {
+    const program = session.programs.find((item) => item.id === programId) ?? null;
+    const firstSong = program?.songIds.map((id) => session.songs.find((song) => song.id === id)).find(Boolean) ?? null;
+    updateSession({ ...session, activeProgramId: program?.id ?? null, song: firstSong });
+  };
+  const openNewProgram = () => {
+    setEditingProgramId(null);
+    setProgramName("");
+    setProgramSongIds([]);
+    setShowProgram(true);
+  };
+  const editProgram = (program: Program) => {
+    setEditingProgramId(program.id);
+    setProgramName(program.name);
+    setProgramSongIds([...program.songIds]);
+    setShowProgram(true);
+  };
+  const toggleProgramSong = (songId: string) => {
+    setProgramSongIds((ids) => ids.includes(songId) ? ids.filter((id) => id !== songId) : [...ids, songId]);
+  };
+  const moveProgramSong = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= programSongIds.length) return;
+    setProgramSongIds((ids) => {
+      const next = [...ids];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+  const saveProgram = () => {
+    if (!programName.trim() || !programSongIds.length) return;
+    const program: Program = { id: editingProgramId ?? crypto.randomUUID(), name: programName.trim(), songIds: programSongIds };
+    const programs = editingProgramId
+      ? session.programs.map((item) => item.id === editingProgramId ? program : item)
+      : [...session.programs, program];
+    updateSession({ ...session, programs });
+    setShowProgram(false);
+  };
+  const deleteProgram = (program: Program) => {
+    if (!window.confirm(`Excluir a programação "${program.name}"? As músicas continuarão na biblioteca.`)) return;
+    updateSession({
+      ...session,
+      programs: session.programs.filter((item) => item.id !== program.id),
+      activeProgramId: session.activeProgramId === program.id ? null : session.activeProgramId,
+    });
+  };
   const changeTranspose = (delta: number) => {
     if (!session.song?.hasChords) return;
     const updatedSong = { ...session.song, transpose: (session.song.transpose ?? 0) + delta };
@@ -1036,7 +1099,12 @@ function Admin({
   const deleteSong = (song: Song) => {
     if (!window.confirm(`Excluir "${song.title}" e toda a sua programação?`)) return;
     const remaining = session.songs.filter((item) => item.id !== song.id);
-    updateSession({ ...session, songs: remaining, song: session.song?.id === song.id ? null : session.song });
+    updateSession({
+      ...session,
+      songs: remaining,
+      song: session.song?.id === song.id ? null : session.song,
+      programs: session.programs.map((program) => ({ ...program, songIds: program.songIds.filter((id) => id !== song.id) })),
+    });
   };
   const setupSong = session.songs.find((song) => song.id === setupSongId) ?? null;
   const renameSection = (songId: string, sectionId: string, label: string) => {
@@ -1252,7 +1320,9 @@ function Admin({
             <div className="audience-bar"><span>APRESENTAR PARA</span><div><button className={audience === "all" ? "active" : ""} onClick={() => setAudience("all")}><UsersRound /> Todos</button><button className={audience === "voice" ? "active" : ""} onClick={() => setAudience("voice")}><Mic2 /> Vocal</button><button className={audience === "instrument" ? "active" : ""} onClick={() => setAudience("instrument")}><Guitar /> Instrumental</button></div><small>Novos envios irão somente para o grupo selecionado.</small></div>
             <div className="live-control-layout">
               <div className="live-command-area">
-                <div className="live-song-bar"><div><Music2 /><span><small>MÚSICA ATUAL</small><b>{session.song?.title ?? "Modo sem letra"}</b></span></div>{session.song?.hasChords && <div className="key-stepper"><button onClick={() => changeTranspose(-1)}>−</button><span><small>TOM</small><b>{transposeKey(session.song.key, session.song.transpose ?? 0)}</b></span><button onClick={() => changeTranspose(1)}>+</button></div>}<select value={session.song?.id ?? ""} onChange={(e) => changeSong(e.target.value)}><option value="">Sem letra</option>{session.songs.map((song) => <option value={song.id} key={song.id}>{song.title}</option>)}</select></div>
+                <div className="live-program-bar"><div><CalendarDays /><span><small>PROGRAMAÇÃO</small><b>{activeProgram?.name ?? "Todas as músicas"}</b></span></div><select value={activeProgram?.id ?? ""} onChange={(e) => selectProgram(e.target.value)}><option value="">Biblioteca completa</option>{session.programs.map((program) => <option value={program.id} key={program.id}>{program.name}</option>)}</select></div>
+                {activeProgram && <div className="program-song-strip">{liveSongs.map((song, index) => <button className={session.song?.id === song.id ? "active" : ""} onClick={() => changeSong(song.id)} key={song.id}><small>{index + 1}</small><b>{song.title}</b></button>)}</div>}
+                <div className="live-song-bar"><div><Music2 /><span><small>MÚSICA ATUAL</small><b>{session.song?.title ?? "Modo sem letra"}</b></span></div>{session.song?.hasChords && <div className="key-stepper"><button onClick={() => changeTranspose(-1)}>−</button><span><small>TOM</small><b>{transposeKey(session.song.key, session.song.transpose ?? 0)}</b></span><button onClick={() => changeTranspose(1)}>+</button></div>}<select value={session.song?.id ?? ""} onChange={(e) => changeSong(e.target.value)}><option value="">Sem letra</option>{liveSongs.map((song) => <option value={song.id} key={song.id}>{song.title}</option>)}</select></div>
                 <div className="live-main-buttons">
                   {session.commandTags.map((tag) => <button key={tag.id} style={{ backgroundColor: tag.color }} onClick={() => sendCommand(tag.label)}><span>{tag.label}</span><Send /></button>)}
                 </div>
@@ -1327,7 +1397,12 @@ function Admin({
                 </div></>}
                 </section>
                 <section className="setup-block">
-                  <div className="setup-block-title"><span>3</span><div><b>Direções personalizadas</b><small>Prepare comandos extras que estarão disponíveis no console ao vivo.</small></div></div>
+                  <div className="setup-block-title"><span>3</span><div><b>Programações</b><small>Monte repertórios por culto ou evento e deixe as músicas na ordem.</small></div></div>
+                  <div className="program-heading"><div><CalendarDays /><span><b>Repertórios salvos</b><small>Selecione uma programação no controle ao vivo.</small></span></div><button onClick={openNewProgram}><Plus size={15} /> Nova programação</button></div>
+                  {session.programs.length === 0 ? <div className="program-empty"><CalendarDays /><b>Nenhuma programação criada</b><small>Escolha músicas da biblioteca e organize a ordem do evento.</small></div> : <div className="program-list">{session.programs.map((program) => <div key={program.id}><span><CalendarDays /></span><div><b>{program.name}</b><small>{program.songIds.length} {program.songIds.length === 1 ? "música" : "músicas"}</small><p>{program.songIds.map((id) => session.songs.find((song) => song.id === id)?.title).filter(Boolean).join(" → ")}</p></div><button onClick={() => editProgram(program)}>Editar</button><button className="delete" onClick={() => deleteProgram(program)}><Trash2 /></button></div>)}</div>}
+                </section>
+                <section className="setup-block">
+                  <div className="setup-block-title"><span>4</span><div><b>Direções personalizadas</b><small>Prepare comandos extras que estarão disponíveis no console ao vivo.</small></div></div>
                 <div className="quick-heading"><b>Direções rápidas</b><button onClick={() => setShowAdd(true)}><Plus size={15} /> Criar direção</button></div>
                 <div className="quick-grid">
                   {session.customCues.map((cue) => <div key={cue}>{cue}<Settings2 size={14} /></div>)}
@@ -1336,6 +1411,15 @@ function Admin({
                 </section>
               </div>
             </div>
+            {showProgram && <div className="modal-backdrop" onMouseDown={() => setShowProgram(false)}><div className="song-modal program-modal" onMouseDown={(e) => e.stopPropagation()}>
+              <div className="modal-heading"><div><span><CalendarDays /></span><h2>{editingProgramId ? "Editar programação" : "Nova programação"}</h2><p>Escolha as músicas e defina a ordem do evento.</p></div><button className="icon-button" onClick={() => setShowProgram(false)}><X /></button></div>
+              <label className="program-name">Nome da programação<input value={programName} onChange={(e) => setProgramName(e.target.value)} placeholder="Ex.: Culto de domingo • 15/09" autoFocus /></label>
+              <div className="program-builder">
+                <div><b>Músicas da biblioteca</b><small>Marque as que farão parte deste evento.</small><div className="program-picker">{session.songs.map((song) => <label key={song.id}><input type="checkbox" checked={programSongIds.includes(song.id)} onChange={() => toggleProgramSong(song.id)} /><span><b>{song.title}</b><small>{song.artist || "Sem artista"}</small></span></label>)}</div></div>
+                <div><b>Ordem do evento</b><small>Use as setas para ordenar.</small><div className="program-order">{programSongIds.map((id, index) => { const song = session.songs.find((item) => item.id === id); return song ? <div key={id}><span>{index + 1}</span><b>{song.title}</b><button disabled={index === 0} onClick={() => moveProgramSong(index, -1)}><ArrowUp /></button><button disabled={index === programSongIds.length - 1} onClick={() => moveProgramSong(index, 1)}><ArrowDown /></button><button onClick={() => toggleProgramSong(id)}><X /></button></div> : null; })}{!programSongIds.length && <p>Selecione pelo menos uma música.</p>}</div></div>
+              </div>
+              <button className="primary full" disabled={!programName.trim() || !programSongIds.length} onClick={saveProgram}>Salvar programação <Check size={17} /></button>
+            </div></div>}
             {showLibrary && <div className="modal-backdrop" onMouseDown={() => setShowLibrary(false)}><div className="song-modal library-modal" onMouseDown={(e) => e.stopPropagation()}>
               <div className="modal-heading"><div><span><Library /></span><h2>Biblioteca de músicas</h2><p>Músicas salvas com letras, tags e programação.</p></div><button className="icon-button" onClick={() => setShowLibrary(false)}><X /></button></div>
               {session.songs.length === 0 ? <div className="library-empty"><Music2 /><b>Nenhuma música salva</b><button className="primary" onClick={() => { setShowLibrary(false); openNewSong(); }}><Plus /> Adicionar música</button></div> : <div className="library-list">
