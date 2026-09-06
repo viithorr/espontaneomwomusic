@@ -97,6 +97,16 @@ function stripChords(value: string) {
   return value.replace(/\[[^\]]+\]/g, "").trim();
 }
 
+function normalizePastedChart(value: string) {
+  return value
+    .replace(/\r/g, "")
+    .replace(/[\u00a0\u2007\u202f]/g, " ")
+    .replace(/[\u200b\u200c\u200d\ufeff]/g, "")
+    .replace(/\*\*([^*\n]+)\*\*/g, "$1")
+    .replace(/__([^_\n]+)__/g, "$1")
+    .replace(/\t/g, "    ");
+}
+
 function transposeChord(chord: string, semitones: number) {
   return chord.replace(/(^|\/)([A-G])([#b]?)/g, (_match, prefix: string, root: string, accidental: string) => {
     const normalized = `${root}${accidental}`;
@@ -182,13 +192,31 @@ function chordLineToChordPro(chordLine: string, lyricLine: string) {
 type ParsedChartLine = { lyric: string; chordPro: string; label: string; countsAsLyric: boolean };
 
 function parseChordChart(value: string): ParsedChartLine[] {
-  const rawLines = value.replace(/\r/g, "").split("\n");
+  const rawLines = normalizePastedChart(value).split("\n");
   const parsed: ParsedChartLine[] = [];
   let currentLabel = "";
   let pendingChordLine = "";
 
-  for (const rawLine of rawLines) {
-    const trimmed = rawLine.trim();
+  for (const originalLine of rawLines) {
+    let rawLine = originalLine;
+    let trimmed = rawLine.trim();
+    const markerWithContent = trimmed.match(/^\[([^\]]+)\]\s*(.*)$/);
+    if (markerWithContent) {
+      const detectedSection = sectionFromMarker(markerWithContent[1]);
+      if (detectedSection) {
+        currentLabel = detectedSection;
+        pendingChordLine = "";
+        rawLine = markerWithContent[2];
+        trimmed = rawLine.trim();
+        if (!trimmed) continue;
+        if (isTraditionalChordLine(rawLine)) {
+          const chordPro = [...trimmed.matchAll(/[A-G](?:#|b)?[A-Za-z0-9Â°Âº()+-]*(?:\/[A-G](?:#|b)?)?/g)]
+            .map((match) => `[${match[0]}] `).join("");
+          parsed.push({ lyric: "", chordPro, label: currentLabel, countsAsLyric: false });
+          continue;
+        }
+      }
+    }
     const heading = trimmed.match(/^\[([^\]]+)\]$/);
     const bracketContent = heading?.[1].trim() ?? "";
     const detectedBracketSection = bracketContent ? sectionFromMarker(bracketContent) : "";
@@ -1123,6 +1151,33 @@ function Admin({
       chordLyrics: chordMode ? lyrics : undefined,
     } : section));
   };
+  const moveSectionLine = (sectionIndex: number, direction: -1 | 1) => {
+    setPreparedSections((sections) => {
+      const targetIndex = sectionIndex + direction;
+      if (targetIndex < 0 || targetIndex >= sections.length) return sections;
+      const next = sections.map((section) => ({ ...section }));
+      const source = next[sectionIndex];
+      const target = next[targetIndex];
+      const sourceRows = (chordMode ? source.chordLyrics ?? source.lyrics : source.lyrics).split("\n");
+      const targetRows = (chordMode ? target.chordLyrics ?? target.lyrics : target.lyrics).split("\n");
+      const lyricIndexes = sourceRows
+        .map((row, index) => ({ index, lyric: chordMode ? stripChords(row) : row.trim() }))
+        .filter((row) => row.lyric);
+      if (lyricIndexes.length <= 1) return sections;
+      const movingIndex = direction === -1 ? lyricIndexes[0].index : lyricIndexes[lyricIndexes.length - 1].index;
+      const [movingRow] = sourceRows.splice(movingIndex, 1);
+      if (direction === -1) targetRows.push(movingRow);
+      else targetRows.unshift(movingRow);
+      const applyRows = (section: Section, rows: string[]) => ({
+        ...section,
+        lyrics: rows.map((row) => chordMode ? stripChords(row) : row.trim()).filter(Boolean).join("\n"),
+        chordLyrics: chordMode ? rows.join("\n") : undefined,
+      });
+      next[sectionIndex] = applyRows(source, sourceRows);
+      next[targetIndex] = applyRows(target, targetRows);
+      return next;
+    });
+  };
   const removePreparedSection = (sectionId: string) => {
     setPreparedSections((sections) => sections.filter((section) => section.id !== sectionId));
   };
@@ -1312,7 +1367,14 @@ function Admin({
                   <div className="classify-list">
                     {preparedSections.map((section, index) => <div className={section.label ? "classified" : ""} key={section.id}>
                       <span>{index + 1}</span>
-                      <textarea value={chordMode ? section.chordLyrics ?? section.lyrics : section.lyrics} onChange={(e) => updatePreparedLyrics(section.id, e.target.value)} aria-label={`Letra do trecho ${index + 1}`} />
+                      <div className="section-content-editor">
+                        {chordMode && <div className="chart-preview"><ChordLyrics value={section.chordLyrics ?? section.lyrics} /></div>}
+                        <textarea value={chordMode ? section.chordLyrics ?? section.lyrics : section.lyrics} onChange={(e) => updatePreparedLyrics(section.id, e.target.value)} aria-label={`Letra do trecho ${index + 1}`} />
+                        <div className="section-boundary-actions">
+                          <button disabled={index === 0} onClick={() => moveSectionLine(index, -1)}>Mover 1ª linha para anterior</button>
+                          <button disabled={index === preparedSections.length - 1} onClick={() => moveSectionLine(index, 1)}>Mover última para próximo</button>
+                        </div>
+                      </div>
                       <select value={section.label} onChange={(e) => updatePreparedLabel(section.id, e.target.value)}>
                         <option value="">Sem comando</option>
                         {STANDARD_CUES.map((cue) => <option value={cue} key={cue}>{cue}</option>)}

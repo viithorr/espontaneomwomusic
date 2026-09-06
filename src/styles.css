@@ -445,7 +445,7 @@ button { cursor: pointer; }
 .song-form-grid input,.song-field input,.song-field textarea { width:100%; border:1px solid #dfe3dc; border-radius:9px; outline:0; padding:11px 12px; color:#252a27; background:#fcfdfb; font-size:11px; font-weight:400; }
 .song-field { margin-top:12px; }
 .song-field input { max-width:110px; }
-.song-field textarea { min-height:180px; resize:vertical; line-height:1.55; }
+.song-field textarea { min-height:180px; resize:vertical; line-height:1.55; font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace; white-space:pre; overflow:auto; }
 .song-form-grid input:focus,.song-field input:focus,.song-field textarea:focus { border-color:#9fc958; box-shadow:0 0 0 3px rgba(165,207,91,.1); }
 .line-choice { display:flex; justify-content:space-between; align-items:center; gap:15px; margin:14px 0; padding:13px; border-radius:10px; background:#f6f7f4; }
 .line-choice > div:first-child { display:flex; flex-direction:column; }
@@ -477,6 +477,16 @@ button { cursor: pointer; }
 .classify-list > div.classified { border-left:3px solid #9dca55; }
 .classify-list > div > span { width:22px; height:22px; display:grid; place-items:center; border-radius:6px; color:#7b847e; background:#ecefea; font-size:8px; }
 .classify-list textarea { width:100%; min-height:60px; resize:vertical; padding:7px; border:1px solid #e0e4dd; border-radius:7px; color:#5f6761; background:white; font-size:9px; line-height:1.45; }
+.section-content-editor { min-width:0; display:flex; flex-direction:column; gap:6px; }
+.chart-preview { max-width:100%; overflow-x:auto; padding:10px; border:1px solid #e2e6df; border-radius:8px; background:#111612; color:white; }
+.chart-preview .chord-lyrics { gap:8px; font:500 11px/1.6 "SFMono-Regular",Consolas,"Liberation Mono",monospace; }
+.chart-preview .chord-line { flex-wrap:nowrap; min-width:max-content; }
+.chart-preview .chord-line b,.chart-preview .instrumental-chords b { font-size:9px; }
+.chart-preview .chord-line i { font-family:inherit; font-weight:500; }
+.chart-preview .instrumental-chords { min-height:32px; justify-content:flex-start; gap:18px; }
+.section-boundary-actions { display:flex; flex-wrap:wrap; gap:5px; }
+.section-boundary-actions button { min-height:27px; padding:0 8px; border:1px solid #dce2d8; border-radius:6px; color:#617147; background:#f7faF2; font-size:7px; }
+.section-boundary-actions button:disabled { opacity:.35; cursor:not-allowed; }
 .classify-list select { min-width:0; border:1px solid #d9ded6; border-radius:7px; padding:8px; color:#515952; background:white; font-size:9px; }
 .classify-list .remove-section { width:29px; height:29px; padding:0; display:grid; place-items:center; border:1px solid #efd7d4; border-radius:7px; color:#b75d54; background:#fff8f7; }
 .classify-list .remove-section svg { width:13px; }
@@ -652,7 +662,8 @@ button { cursor: pointer; }
   .song-timing label { flex:1; }
   .song-timing input { height:40px; }
   .classify-list > div { grid-template-columns:23px minmax(0,1fr) 34px; }
-  .classify-list textarea { grid-column:2/4; }
+  .section-content-editor { grid-column:2/4; }
+  .classify-list textarea { min-height:82px; }
   .classify-list select { grid-column:2; width:100%; }
   .classify-list .remove-section { grid-column:3; }
   .library-list > div { grid-template-columns:38px minmax(0,1fr) 34px; }
