@@ -1312,14 +1312,16 @@ function Admin({
                   <div className="song-actions"><select value={setupSongId} onChange={(e) => setSetupSongId(e.target.value)}><option value="">Selecione</option>{session.songs.map((song) => <option value={song.id} key={song.id}>{song.title}</option>)}</select><button onClick={() => setShowLibrary(true)}><Library size={14} /> Biblioteca</button><button onClick={openNewSong}><Plus size={14} /> Música</button></div>
                 </div>
                 {!setupSong ? <div className="empty-music compact"><Music2 /><b>Nenhuma música selecionada</b><p>Abra a biblioteca ou adicione uma música para começar a configuração.</p><button className="primary" onClick={openNewSong}><Plus size={16} /> Adicionar música</button></div> : <><div className="map-label"><b>Estrutura da música</b><small>Revise as tags; nenhum trecho será enviado ao vivo nesta tela</small></div><div className="section-buttons setup-sections">
-                  {setupSong.sections.map((section) => (
-                    <div className="section-button" key={section.id}>
-                      <select value={section.label} onChange={(e) => renameSection(setupSong.id, section.id, e.target.value)}>
+                  {setupSong.sections.map((section, index) => (
+                    <div className="section-button setup-slide" key={section.id}>
+                      <div className="setup-slide-toolbar"><span>{index + 1}</span><select value={section.label} onChange={(e) => renameSection(setupSong.id, section.id, e.target.value)} aria-label={`Comando do slide ${index + 1}`}>
                         <option value="">Sem comando</option>
                         {section.label && <option value={section.label}>{section.label}</option>}
                         {STANDARD_CUES.filter((cue) => cue !== section.label).map((cue) => <option value={cue} key={cue}>{cue}</option>)}
-                      </select>
-                      <small>{section.lyrics.replace(/\n/g, " • ")}</small><Settings2 size={16} />
+                      </select><Settings2 size={14} /></div>
+                      <div className="setup-slide-preview">{setupSong.hasChords && section.chordLyrics
+                        ? <ChordLyrics value={transposeChordPro(section.chordLyrics, setupSong.transpose ?? 0)} />
+                        : section.lyrics.split("\n").map((line, lineIndex) => <span key={lineIndex}>{line}</span>)}</div>
                     </div>
                   ))}
                 </div></>}

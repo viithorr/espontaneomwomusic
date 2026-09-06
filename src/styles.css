@@ -391,8 +391,21 @@ button { cursor: pointer; }
 .quick-grid button:hover { border-color:#a9d466; color:#171b18; }
 .quick-grid > div { min-height:42px; border:1px solid #e3e6e0; border-radius:9px; background:#fafbf9; font-size:10px; display:flex; justify-content:space-between; align-items:center; padding:0 11px; color:#58605b; }
 .quick-grid > div svg { color:#9ca49e; }
-.setup-sections .section-button { cursor:default; }
-.setup-sections .section-button:hover { border-color:#e2e5df; background:#fafbf9; }
+.setup-sections { grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); align-items:start; }
+.setup-sections .setup-slide { min-width:0; min-height:0; aspect-ratio:16/10; padding:0; overflow:hidden; display:grid; grid-template-rows:38px minmax(0,1fr); cursor:default; background:#eef0ed; }
+.setup-sections .setup-slide:hover { border-color:#d9ded6; background:#eef0ed; }
+.setup-slide-toolbar { min-width:0; padding:6px 8px; border-bottom:1px solid #dfe3dd; display:flex; align-items:center; gap:6px; background:#fafbf9; }
+.setup-slide-toolbar > span { width:21px; height:21px; flex:0 0 21px; display:grid; place-items:center; border-radius:5px; color:#6f7a71; background:#e8ece6; font-size:8px; font-weight:800; }
+.setup-slide-toolbar select { min-width:0; flex:1; padding:0 3px; border:0; outline:0; color:#333a35; background:transparent; font-size:10px; font-weight:800; text-overflow:ellipsis; }
+.setup-slide-toolbar > svg { position:static; flex:0 0 13px; width:13px; color:#9ba39d; }
+.setup-slide-preview { min-width:0; overflow:hidden; padding:9px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#252b27; text-align:center; font:650 9px/1.35 "Manrope"; }
+.setup-slide-preview > span { display:block; max-width:100%; }
+.setup-slide-preview .chord-lyrics { width:max-content; max-width:100%; gap:5px; color:#252b27; font:600 8px/1.35 "SFMono-Regular",Consolas,"Liberation Mono",monospace; transform-origin:center; }
+.setup-slide-preview .chord-line { min-height:1.55em; flex-wrap:nowrap; }
+.setup-slide-preview .chord-line b { color:#dd741d; font-size:7px; }
+.setup-slide-preview .chord-line i { color:#252b27; font-family:inherit; font-weight:600; }
+.setup-slide-preview .instrumental-chords { min-height:25px; gap:10px; padding:3px 6px; border-color:#d4d9d2; background:#e4e7e2; }
+.setup-slide-preview .instrumental-chords b { color:#dd741d; font-size:7px; }
 .setup-block .main-command-grid > button { cursor:default; }
 .setup-block .main-command-grid > button:hover { transform:none; filter:none; box-shadow:inset 0 -1px 0 rgba(0,0,0,.1); }
 .inline-add { display:flex; gap:6px; margin-top:10px; }
@@ -641,6 +654,13 @@ button { cursor: pointer; }
   .section-button { width:100%; min-width:0; min-height:76px; }
   .section-button > select { font-size:14px; }
   .section-button small { max-width:100%; padding-right:5px; }
+  .setup-sections { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .setup-sections .setup-slide { width:auto; min-height:0; aspect-ratio:4/3; }
+  .setup-slide-toolbar { padding:5px; gap:4px; }
+  .setup-slide-toolbar select { font-size:8px; }
+  .setup-slide-preview { padding:6px; font-size:7px; }
+  .setup-slide-preview .chord-lyrics { font-size:6.5px; }
+  .setup-slide-preview .chord-line b,.setup-slide-preview .instrumental-chords b { font-size:6px; }
   .quick-grid { grid-template-columns:repeat(2,1fr); }
   .quick-grid button { min-width:0; min-height:48px; }
   .quick-heading { gap:8px; }
